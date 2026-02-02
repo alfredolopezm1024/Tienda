@@ -1,0 +1,72 @@
+﻿using Business.Interfaces;
+using Entity.DTO;
+using Entity.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
+
+namespace Web.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    [Authorize]
+    public class ArticuloController : ControllerBase
+    {
+        private readonly IArticuloService service;
+        public ArticuloController(IArticuloService service) 
+        {
+            this.service = service;
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
+        {
+            return Ok((await service.GetAll()).Data);
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(int id)
+        {
+            var result = await service.GetById(id);
+
+            if (!result.Success) return NotFound(result.Message);
+
+            return Ok(result.Data);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> create([FromBody] ArticuloCreateDTO articulo)
+        {
+            if (articulo == null) return BadRequest("Los datos son incorrectos");
+
+            var result = await service.Create(articulo);
+
+            if (!result.Success) return StatusCode(500, result.Message);
+
+            return CreatedAtAction(nameof(GetById), new { id = result.Data.Id }, result.Data);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> update(int id, [FromBody] Articulo articulo)
+        {
+            if (id != articulo.Id) return BadRequest("El id del artículo no coincide con el de la URL");
+
+            var result = await service.Update(articulo);
+
+            if (!result.Success) return NotFound(result.Message);
+
+            return NoContent();
+        }
+
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> delete(int id)
+        {
+            var result = await service.Delete(id);
+
+            if (!result.Success) return NotFound(result.Message);
+
+            return NoContent();
+        }
+    }
+}
