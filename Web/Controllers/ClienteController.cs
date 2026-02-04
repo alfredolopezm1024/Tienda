@@ -36,7 +36,7 @@ namespace Web.Controllers
 
         [HttpPost]
         [AllowAnonymous]
-        public async Task<IActionResult> create([FromBody] Cliente cliente)
+        public async Task<IActionResult> Create([FromBody] Cliente cliente)
         {
             if (cliente == null) return BadRequest("Los datos son incorrectos");
 
@@ -46,7 +46,7 @@ namespace Web.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> update(int id, [FromBody] Cliente cliente)
+        public async Task<IActionResult> Update(int id, [FromBody] Cliente cliente)
         {
             if (id != cliente.Id) return BadRequest("El id del cliente no coincide con el de la URL");
 
@@ -59,7 +59,7 @@ namespace Web.Controllers
 
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> delete(int id) 
+        public async Task<IActionResult> Delete(int id) 
         {
             var result = await service.Delete(id);
 

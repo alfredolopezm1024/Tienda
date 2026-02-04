@@ -34,20 +34,30 @@ namespace Web.Controllers
             return Ok(result.Data);
         }
 
+        [HttpGet("{id}/tiendas")]
+        public async Task<IActionResult> GetTiendasByArticuloId(int id)
+        {
+            var result = await service.GetTiendasByArticuloId(id);
+            
+            if (!result.Success) return NotFound(result.Message);
+            
+            return Ok(result.Data);
+        }
+
         [HttpPost]
-        public async Task<IActionResult> create([FromBody] ArticuloCreateDTO articulo)
+        public async Task<IActionResult> Create([FromBody] ArticuloCreateDTO articulo)
         {
             if (articulo == null) return BadRequest("Los datos son incorrectos");
 
             var result = await service.Create(articulo);
-
+                
             if (!result.Success) return StatusCode(500, result.Message);
 
             return CreatedAtAction(nameof(GetById), new { id = result.Data.Id }, result.Data);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> update(int id, [FromBody] Articulo articulo)
+        public async Task<IActionResult> Update(int id, [FromBody] ArticuloCreateDTO articulo)
         {
             if (id != articulo.Id) return BadRequest("El id del artículo no coincide con el de la URL");
 
@@ -60,7 +70,7 @@ namespace Web.Controllers
 
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
             var result = await service.Delete(id);
 

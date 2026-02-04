@@ -12,8 +12,10 @@ namespace Business.Interfaces
     {
         Task<Result<IEnumerable<Articulo>>> GetAll();
         Task<Result<Articulo>> GetById(int id);
-        Task<Result<Articulo>> Create(ArticuloCreateDTO cliente);
-        Task<Result<Articulo>> Update(Articulo cliente);
+        Task<Result<IEnumerable<Tienda>>> GetTiendasByArticuloId(int tienda);
+
+        Task<Result<Articulo>> Create(ArticuloCreateDTO articulo);
+        Task<Result<Articulo>> Update(ArticuloCreateDTO articulo);
         Task<Result<bool>> Delete(int id);
     }
 }

@@ -20,7 +20,7 @@ namespace Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> create([FromBody] OrderRequestDTO orderRequestDTO) 
+        public async Task<IActionResult> Create([FromBody] OrderRequestDTO orderRequestDTO) 
         {
             var result = await service.create(orderRequestDTO);
 

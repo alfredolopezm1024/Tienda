@@ -36,7 +36,7 @@ namespace Web.Controllers
         }
 
         [HttpGet("{id}/articulos")]
-        public async Task<IActionResult> GetArticulosById(int id) 
+        public async Task<IActionResult> GetArticulosByTiendaId(int id) 
         {
             var result = await service.GetArticulosByTiendaId(id);
 
@@ -46,7 +46,7 @@ namespace Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> create([FromBody] Tienda tienda)
+        public async Task<IActionResult> Create([FromBody] Tienda tienda)
         {
             if (tienda == null) return BadRequest("Los datos son incorrectos");
 
@@ -56,7 +56,7 @@ namespace Web.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> update(int id, [FromBody] Tienda tienda)
+        public async Task<IActionResult> Update(int id, [FromBody] Tienda tienda)
         {
             if (id != tienda.Id) return BadRequest("El id de la tienda no coincide con el de la URL");
 
@@ -69,7 +69,7 @@ namespace Web.Controllers
 
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
             var result = await service.Delete(id);
 

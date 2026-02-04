@@ -1,12 +1,16 @@
 ﻿using Business.common;
 using Business.Interfaces;
+using Data.Context;
 using Data.Interfaces;
 using Entity.DTO;
 using Entity.Models;
 using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
+using System.Linq;
+using Microsoft.EntityFrameworkCore;
+
 
 namespace Business.Services
 {
@@ -14,13 +18,15 @@ namespace Business.Services
     {
         private readonly IBaseRepository<Articulo> repository;
         private readonly IBaseRepository<TiendaArticulo> tiendaAticuloRepository;
+        private readonly ApplicationDbContext context;
 
         public ArticuloService(IBaseRepository<Articulo> repository, 
-            IBaseRepository<TiendaArticulo> tiendaAticuloRepository) 
+            IBaseRepository<TiendaArticulo> tiendaAticuloRepository,
+            ApplicationDbContext context) 
         {
             this.repository = repository;
             this.tiendaAticuloRepository = tiendaAticuloRepository;
-
+            this.context = context;
         }
 
         public async Task<Result<IEnumerable<Articulo>>> GetAll()
@@ -44,14 +50,14 @@ namespace Business.Services
 
             if (articuloDTO == null) return Result<Articulo>.Error("Datos incorrectos");
 
-            if(string.IsNullOrEmpty(articuloDTO.ImagenBase64)) 
+            if(string.IsNullOrEmpty(articuloDTO.Imagen)) 
                 return Result<Articulo>.Error("Datos incorrectos");
 
             try
             {
-                string imageBase64 = articuloDTO.ImagenBase64.Contains(",")
-                    ? articuloDTO.ImagenBase64.Split(',')[1]
-                    : articuloDTO.ImagenBase64;
+                string imageBase64 = articuloDTO.Imagen.Contains(",")
+                    ? articuloDTO.Imagen.Split(',')[1]
+                    : articuloDTO.Imagen;
 
                 var articulo = new Articulo
                 {
@@ -65,16 +71,6 @@ namespace Business.Services
                 await repository.InsertAsync(articulo);
                 await repository.SaveAsync();
 
-                var tiendaArticulo = new TiendaArticulo
-                {
-                    TiendaId = articuloDTO.TiendaId,
-                    ArticuloId = articulo.Id,
-                    Fecha = DateTime.Now
-                };
-
-                await tiendaAticuloRepository.InsertAsync(tiendaArticulo);
-                await tiendaAticuloRepository.SaveAsync();
-
                 return Result<Articulo>.Ok(articulo);
             }
             catch (Exception ex) 
@@ -83,7 +79,7 @@ namespace Business.Services
             }
         }
 
-        public async Task<Result<Articulo>> Update(Articulo articulo)
+        public async Task<Result<Articulo>> Update(ArticuloCreateDTO articulo)
         {
             var currentData = await repository.GetByIdAsync(articulo.Id);
             if (currentData == null) return Result<Articulo>.Error("Artículo no encontrado");
@@ -91,8 +87,29 @@ namespace Business.Services
             currentData.Codigo = articulo.Codigo;
             currentData.Descripcion = articulo.Descripcion;
             currentData.Precio = articulo.Precio;
-            currentData.Imagen = articulo.Imagen;
-            currentData.stock = articulo.stock;
+            currentData.stock = articulo.Stock;
+
+            if(!string.IsNullOrEmpty(articulo.Imagen))
+            {
+                string imageBase64 = articulo.Imagen.Contains(",")
+                    ? articulo.Imagen.Split(',')[1]
+                    : articulo.Imagen;
+
+                try 
+                { 
+                    byte[] imageByte = Convert.FromBase64String(imageBase64);
+
+                    if (currentData.Imagen == null 
+                        || !StructuralComparisons.StructuralEqualityComparer.Equals(currentData.Imagen, imageByte))
+                    { 
+                        currentData.Imagen = imageByte;
+                    }
+                }
+                catch(FormatException) 
+                {
+                    return Result<Articulo>.Error("Formato de imagen no válido");
+                }
+            }
 
             await repository.SaveAsync();
 
@@ -108,6 +125,29 @@ namespace Business.Services
             await repository.SaveAsync();
 
             return Result<bool>.Ok();
+        }
+
+        public async Task<Result<IEnumerable<Tienda>>> GetTiendasByArticuloId(int id)
+        {
+            try
+            {
+                var query = from tienda in context.Tiendas
+                            join tiendaArticulo in context.TiendasArticulos on tienda.Id equals tiendaArticulo.TiendaId
+                            where tiendaArticulo.ArticuloId == id
+                            select tienda;
+
+                var tiendas = await query.ToListAsync();
+
+                if (tiendas == null)
+                    return Result<IEnumerable<Tienda>>.Error("No se encontraron artículos para esta tienda.");
+
+                return Result<IEnumerable<Tienda>>.Ok(tiendas);
+
+            }
+            catch (Exception ex)
+            {
+                return Result<IEnumerable<Tienda>>.Error("Error al obtener los artículos: " + ex.Message);
+            }
         }
 
     }
